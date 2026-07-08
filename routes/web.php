@@ -4,11 +4,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\userController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\DashController;
+use App\Http\Controllers\RealDash;
 use App\Models\UserLinks;
+use App\Models\LinkClicks;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Jenssegers\Agent\Agent;
-
 //Route::get('/Test', [userController::class, 'Test']);
 Route::get('/login', function () {
     return view('Login');
@@ -21,11 +22,12 @@ Route::post('/cadastro', [userController::class, 'CadastroSubmit'])->name('submi
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashController::class, 'index'])->name('dashboard')->middleware('web');
+    Route::get('/realdash/{vault}', [RealDash::class, 'Dash'])->name('realdash')->middleware('web');
     Route::post('/logout', [userController::class, 'Logout'])->name('logout')->middleware('web');
 });
 
 
-//Redirecionamento de links de cria
+//Redirecionamento de links de cria né
 Route::get('/{slug}', function ($slug) {
     Log::info('Redirect route accessed with slug: ' . $slug);
     
@@ -37,23 +39,61 @@ Route::get('/{slug}', function ($slug) {
     Log::info('returned value: ' . ($givenLink ?? 'No value found'));*/
     if ($Value) {
         $agent = new Agent();
+        $term = request()->ip() . $Value;
+
+        $hash = hash('sha256', $term);
         //$ag = $agent->setUserAgent(request()->userAgent());
         $device = $agent->isMobile() ? 'mobile' : ($agent->isTablet() ? 'tablet' : 'desktop');
-        Log::info('Device type detected: ' . $device);
+        
+        $firstClick = Redis::lindex("link_generated:{$slug}:clicks", 0);
+        $userlinkInfo = UserLinks::where('link_generated', 'http://localhost:8000/' . $slug)->get();
+        
+        $hashExists = LinkClicks::where('user_link_id', $userlinkInfo[0]->id)->get('hash')->first();
+        $hashExists = $hashExists ? json_decode($hashExists) : null;
 
-        Redis::rpush("link_generated:{$slug}:clicks", json_encode([
-            'slug' => $slug,
-            'timestamp' => now()->toDateTimeString(),
-            'link_clicked' => $Value,
-            'clicked_at' => now()->toDateTimeString(),
-            'browser' => request()->userAgent(),
-            'ip' => request()->ip(),
-            'device' => $device,
-            'location' => 'Unknown',
-            'referer' => request()->headers->get('Referer'),
+        $firstClick = $firstClick ? json_decode($firstClick) : null;
 
-        ]));
+        $storedHash = $firstClick?->hash ?? $hashExists?->hash;
+        if ($storedHash) {
+            Log::info("click já existe no redis ou no banco, só comparar e adicionar como repetido ou n");
+            //Log::info("this is click: " . $firstClick->hash);
+            
+            if (hash_equals($hash, $storedHash)) {
+                Log::info("comparação feita, só mandar pro redis...");
+                Redis::rpush("link_generated:{$slug}:clicks", json_encode([
+                    'slug' => $slug,
+                    'timestamp' => now()->toDateTimeString(),
+                    'link_clicked' => $Value,
+                    'clicked_at' => now()->toDateTimeString(),
+                    'browser' => request()->userAgent(),
+                    'ip' => request()->ip(),
+                    'device' => $device,
+                    'location' => 'Unknown',
+                    'referer' => request()->headers->get('Referer'),
+                    'hash' => null,
+                    'repeated' => true
+                ]));
+            }
 
+
+        }else{
+            Redis::rpush("link_generated:{$slug}:clicks", json_encode([
+                
+                'slug' => $slug,
+                'timestamp' => now()->toDateTimeString(),
+                'link_clicked' => $Value,
+                'clicked_at' => now()->toDateTimeString(),
+                'browser' => request()->userAgent(),
+                'ip' => request()->ip(),
+                'device' => $device,
+                'location' => 'Unknown',
+                'referer' => request()->headers->get('Referer'),
+                'hash' => $hash,
+                'repeated' => false
+
+            ]));
+
+        }
         //$test = Redis::lrange("laravel-database-link_generated:{$slug}:clicks", 0, -1);
         //Log::info('$test: ' . json_encode($test));
         return redirect()->away($Value);

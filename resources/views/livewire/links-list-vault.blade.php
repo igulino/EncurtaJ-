@@ -26,8 +26,8 @@
 
                     <div class="vault-info">
                         <span class="vault-icon">O</span>
-                        <div>
-                            <a href="#" class="vault-title">{{ $vault->name }}</a>
+                        <div>   
+                            <a href="{{ url('/realdash/' . urlencode(str_replace('http://localhost:8000/', '', $vault->link_generated))) }}" class="vault-title">{{ $vault->name }}</a>
                             <p id="vault-link-<?php echo $vault->id; ?>">{{ $vault->link_generated }}</p>
                         </div>
                     </div>
@@ -47,7 +47,9 @@
                 </article>
 
                     <div class="qr-code-modal" id="qr-code-modal-{{ $vault->id }}" style="display: none;">
-                        <?php echo generatedQRCode($vault);?>
+                        <img id="img-{{ $vault->id }}" src="data:image/svg+xml;base64,{{ base64_encode(generatedQRCode($vault)) }}" alt="QR Code para {{ $vault->name }}">
+                        <button class="download-qr-btn" onclick="downloadQRCodesvg(`img-{{ $vault->id }}`)">Download como SVG</button>
+                        <button class="download-qr-btn" onclick="downloadQRCodepng(`img-{{ $vault->id }}`)">Download como PNG</button>
                     </div>
             @endforeach
             </div>
@@ -55,6 +57,7 @@
         </div>
 
         @php
+        
             use SimpleSoftwareIO\QrCode\Facades\QrCode;
             function generatedQRCode($vault) {
                 
@@ -63,6 +66,48 @@
             }
         @endphp
         <script>
+            function downloadQRCodesvg(elementId) {
+
+                console.log("THIS IS ELEMENTID", elementId);
+                
+                const img = document.getElementById(elementId);
+                const link = document.createElement('a');
+
+                link.href = img.src;
+                link.download = `qr-code${elementId.split('-')[1]}.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+            }
+            function downloadQRCodepng(elementId) {
+                const modal = document.getElementById(elementId);
+                console.log("this is img ->", modal);
+
+                const image = new Image();
+                image.onload = function () {
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = image.width || 200;
+                    canvas.height = image.height || 200;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(image, 0, 0);
+
+                    const pngUrl = canvas.toDataURL('image/png');
+
+                    const link = document.createElement('a');
+                    link.href = pngUrl;
+                    link.download = `qr-code${elementId.split('-')[1]}.png`;
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+
+                image.src = modal.src;
+                        
+            }
             
             const input = document.getElementById('search-input');
             //const preview = document.getElementById('preview');

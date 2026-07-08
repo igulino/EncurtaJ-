@@ -37,8 +37,7 @@
                         data-bs-toggle="modal"
                         data-bs-target="#createLinkModal"
                     >
-                        <span wire:loading.remove wire:target="generateLinkModal">+ Criar</span>
-                        <span wire:loading wire:target="generateLinkModal">Carregando...</span>
+                        <span >+ Criar</span>
                     </button>
                     
                     <button class="icon-btn" type="button" aria-label="Visualizacao em grade">||</button>
@@ -49,10 +48,19 @@
 
             <section class="vault-board">
                 
+                
                 <div class="search-Box">
+                     
                     <input class="linklist-eyebrow" id="search-input" type="text" placeholder="Filtrar links...">
-                    <button class="search-Btn">🔍</button>
-                    <p id="preview"></p>
+                        <button class="search-Btn">🔍</button>
+                   
+                    <select class="filter-select" id="filter" name="filter">
+                        
+                        <option value="recent">mais recente</option>
+                        <option value="most-clicks">mais clicados</option>
+                        <option value="least-clicks">menos clicados</option>
+                    </select>
+                     <label for="filter" class="filter-label">Filtrar por: </label>
                 </div>
                 <div class="board-head board-row">
                     <div class="col-check"></div>
