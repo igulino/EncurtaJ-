@@ -1,0 +1,113 @@
+name: urlapp
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
+
+    working_dir: /var/www/html
+
+    volumes:
+      - ./:/var/www/html
+
+    expose:
+      - "9000"
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    ports: 8000-2:8000
+
+    deploys:
+      replicas: 3
+    
+    restart: always
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+    networks:
+      - urlapp-network
+
+  nginx:
+    image: nginx:mainline-alpine
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+    depends_on:
+      - app
+
+    restart: unless-stopped
+
+    networks:
+      - urlapp-network
+
+  mysql:
+    image: mysql:8.4
+
+    environment:
+      MYSQL_DATABASE: urlapp
+      MYSQL_USER: urlapp
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+    restart: unless-stopped
+
+    networks:
+      - urlapp-network
+
+  redis:
+    image: redis:7-alpine
+
+    volumes:
+      - redis-data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+    restart: unless-stopped
+
+    networks:
+      - urlapp-network
+
+networks:
+  urlapp-network:
+    driver: bridge
+    ipam:
+      config:
+        subnet: 10.3.0.0/21
+
+volumes:
+  mysql-data:
+  redis-data:
