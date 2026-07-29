@@ -6,7 +6,7 @@
 
         <title>{{ $title ?? config('app.name') }}</title>
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'public/css/auth.css', 'public/css/dash.css', 'resources/js/app.js'])
 
         @livewireStyles
     </head>
