@@ -11,12 +11,12 @@ class RealDash extends Controller {
     
     public function Dash(Request $request, $vault) {
         
-        Log::info("this .. .");
-
 
         $v1 = urldecode($vault);
         $data = (new RealDashServices)->main($request, $v1);
         
+        
+        Log::info("this data vault " . $data['vault']);
 
         return view('RealDash', [
             'linkClicks' => $data['linkClicks'],
