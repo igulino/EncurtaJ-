@@ -44,6 +44,8 @@ Route::get('/{slug}', function ($slug) {
         $hash = hash('sha256', $term);
         //$ag = $agent->setUserAgent(request()->userAgent());
         $device = $agent->isMobile() ? 'mobile' : ($agent->isTablet() ? 'tablet' : 'desktop');
+
+        Log::info('this is slug: ' . $slug);
         
         $firstClick = Redis::lindex("link_generated:{$slug}:clicks", 0);
         $userlinkInfo = UserLinks::where('link_generated', 'https://encurtaj-production.up.railway.app/' . $slug)->get();

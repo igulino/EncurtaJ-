@@ -27,7 +27,7 @@
                     <div class="vault-info">
                         <span class="vault-icon">O</span>
                         <div>   
-                            <a href="{{ url('/realdash/' . urlencode(str_replace('http://localhost:8000/', '', $vault->link_generated))) }}" class="vault-title">{{ $vault->name }}</a>
+                            <a href="{{ url('/realdash/' . urlencode(str_replace('https://encurtaj-production.up.railway.app/', '', $vault->link_generated))) }}" class="vault-title">{{ $vault->name }}</a>
                             <p id="vault-link-<?php echo $vault->id; ?>">{{ $vault->link_generated }}</p>
                         </div>
                     </div>
