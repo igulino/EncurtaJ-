@@ -46,7 +46,7 @@ Route::get('/{slug}', function ($slug) {
         $device = $agent->isMobile() ? 'mobile' : ($agent->isTablet() ? 'tablet' : 'desktop');
         
         $firstClick = Redis::lindex("link_generated:{$slug}:clicks", 0);
-        $userlinkInfo = UserLinks::where('link_generated', 'http://localhost:8000/' . $slug)->get();
+        $userlinkInfo = UserLinks::where('link_generated', 'https://encurtaj-production.up.railway.app/' . $slug)->get();
         
         $hashExists = LinkClicks::where('user_link_id', $userlinkInfo[0]->id)->get('hash')->first();
         $hashExists = $hashExists ? json_decode($hashExists) : null;
