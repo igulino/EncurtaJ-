@@ -29,9 +29,13 @@ class CreateLinkGeneration extends Component
 
             LinkController::LinkCreation($this->Name, $this->Link);
 
+            Log::info('Pós linkController');
+
             $this->reset(['Name', 'Link']);
             $this->dispatch('link-created');
             $this->dispatch('close-modal');
+
+            Log::info('Pós dispatch');
 
         } catch (\Throwable $e) {
             Log::error('link creation failed', [

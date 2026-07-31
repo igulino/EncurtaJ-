@@ -51,6 +51,7 @@ class LinkController extends Controller
         $urlComponents = parse_url($paramLink);
         $id = substr(uniqid(), 0, 15);
         $ReturnLink = 'http://localhost:8000/' . $id;
+        //https://encurtaj-production.up.railway.app
         //Log::info('Generated link: ' . $ReturnLink);
 
         return [$ReturnLink, $id];
