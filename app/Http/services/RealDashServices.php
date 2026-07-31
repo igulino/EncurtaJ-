@@ -13,7 +13,7 @@ class RealDashServices {
         
         $user = $request->user();
         
-        $id = UserLinks::where('link_generated', 'http://localhost:8000/' . $vault)->first(['id', 'user_id', 'created_at', 'link_generated', 'name']);
+        $id = UserLinks::where('link_generated', 'https://encurtaj-production.up.railway.app/' . $vault)->first(['id', 'user_id', 'created_at', 'link_generated', 'name']);
         
         if (!$id) {
             return [
